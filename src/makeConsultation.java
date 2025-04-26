@@ -1,0 +1,229 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
+ */
+import java.io.*;
+import java.time.LocalDate;
+import java.util.*;
+import javax.swing.DefaultListModel;
+import javax.swing.JOptionPane;
+
+public class makeConsultation extends javax.swing.JFrame {
+    private String studentID; 
+
+    // Constructor for makeConsultation class.
+    public makeConsultation(String studentID) {
+        this.studentID = studentID;
+        initComponents();
+        loadAvailableSlots(); 
+    }
+
+    // Method to load available consultation slots for the lecturer.
+    private void loadAvailableSlots() {
+        DefaultListModel<String> model = new DefaultListModel<>();
+        try (BufferedReader br = new BufferedReader(new FileReader("consultation.txt"))) {
+            String line;
+            int lineIndex = 0;
+            while ((line = br.readLine()) != null) {
+                lineIndex++;
+                if (lineIndex == 1) continue;
+
+                String[] details = line.split(",");
+                String consultationID = details[0];
+                String lecturerID = details[1];
+                String studentID = details[2];
+                String date = details[3];
+                String time = details[4];
+                String status = details[5];
+
+                if (status.equalsIgnoreCase("Available")) {
+                    String lecturerName = getName(lecturerID);
+                    model.addElement(String.format("ID: %s | Lecturer ID: %s | Lecturer: %s | Date: %s | Time: %s | Status: %s",
+                        consultationID, lecturerID, lecturerName, date, time, status));
+                }
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error loading consultation slots: " + e.getMessage());
+        }
+        ListMCS.setModel(model);
+    }
+    
+    // Method to retrieve the name of the lecturer by their ID.
+    private String getName(String lecturerID) {
+        try (BufferedReader br = new BufferedReader(new FileReader("user.txt"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] userDetails = line.split(",");
+                if (userDetails[0].equals(lecturerID)) {
+                    return userDetails[1]; 
+                }
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error retrieving lecturer name: " + e.getMessage());
+        }
+        return "Unknown Lecturer"; 
+    }
+    
+    // Method to book a selected consultation slot.
+    private void bookSlot() {
+        String selectedSlot = ListMCS.getSelectedValue();
+        if (selectedSlot == null) {
+            JOptionPane.showMessageDialog(this, "Please select a consultation slot to book.");
+            return;
+        }
+
+        String consultationID = selectedSlot.split("\\|")[0].split(":")[1].trim(); 
+        List<String> lines = new ArrayList<>();
+        boolean slotUpdated = false;
+
+        try (BufferedReader br = new BufferedReader(new FileReader("consultation.txt"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts[0].equals(consultationID)) {
+                    LocalDate slotDate = LocalDate.parse(parts[3]); 
+                    LocalDate currentDate = LocalDate.now();
+
+                    if (slotDate.isBefore(currentDate)) {
+                        parts[5] = "Completed";
+                        parts[2] = studentID; 
+                    } else {
+                        parts[2] = studentID; 
+                        parts[5] = "Booked";
+                    }
+
+                    line = String.join(",", parts) + ",";
+                    slotUpdated = true;
+                }
+                lines.add(line);
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error booking slot: " + e.getMessage());
+            return;
+        }
+
+        if (!slotUpdated) {
+            JOptionPane.showMessageDialog(this, "Error: Slot not found or already booked.");
+            return;
+        }
+
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter("consultation.txt"))) {
+            for (String updatedLine : lines) {
+                bw.write(updatedLine);
+                bw.newLine();
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error saving booked slot: " + e.getMessage());
+            return;
+        }
+
+        JOptionPane.showMessageDialog(this, "Consultation slot booked successfully!");
+        loadAvailableSlots(); 
+    }
+
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        jPopupMenu1 = new javax.swing.JPopupMenu();
+        jPopupMenu2 = new javax.swing.JPopupMenu();
+        jLabel1 = new javax.swing.JLabel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        ListMCS = new javax.swing.JList<>();
+        BookSlotButtonMCS = new javax.swing.JButton();
+        DBButtonMCS = new javax.swing.JButton();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        jLabel1.setFont(new java.awt.Font("Big Caslon", 0, 18)); // NOI18N
+        jLabel1.setText("Make Consultation");
+
+        jScrollPane1.setViewportView(ListMCS);
+
+        BookSlotButtonMCS.setText("Book Slot");
+        BookSlotButtonMCS.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BookSlotButtonMCSActionPerformed(evt);
+            }
+        });
+
+        DBButtonMCS.setText("Dashboard");
+        DBButtonMCS.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                DBButtonMCSActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(DBButtonMCS))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(24, 24, 24)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(BookSlotButtonMCS)
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 474, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addContainerGap(27, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(jLabel1)
+                .addGap(203, 203, 203))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(13, 13, 13)
+                .addComponent(DBButtonMCS)
+                .addGap(18, 18, 18)
+                .addComponent(jLabel1)
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane1)
+                .addGap(18, 18, 18)
+                .addComponent(BookSlotButtonMCS)
+                .addGap(37, 37, 37))
+        );
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void BookSlotButtonMCSActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BookSlotButtonMCSActionPerformed
+        bookSlot();
+    }//GEN-LAST:event_BookSlotButtonMCSActionPerformed
+
+    private void DBButtonMCSActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DBButtonMCSActionPerformed
+        studentDashboard studentDashboard = new studentDashboard(studentID); 
+        studentDashboard.setVisible(true); 
+        this.dispose(); 
+    }//GEN-LAST:event_DBButtonMCSActionPerformed
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        java.awt.EventQueue.invokeLater(() -> {
+            new makeConsultation("testStudentID").setVisible(true); 
+        });
+    }
+
+    
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton BookSlotButtonMCS;
+    private javax.swing.JButton DBButtonMCS;
+    private javax.swing.JList<String> ListMCS;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JPopupMenu jPopupMenu1;
+    private javax.swing.JPopupMenu jPopupMenu2;
+    private javax.swing.JScrollPane jScrollPane1;
+    // End of variables declaration//GEN-END:variables
+}
